@@ -13,7 +13,8 @@ The Go distribution is RedisGo-Async's only dependency.
 Related Projects
 ----------------
 
-- [rafaeljusto/redigomock](https://godoc.org/github.com/rafaeljusto/redigomock) - A mock library for RedisGo-Async.
+- [garyburd/redigo](https://github.com/garyburd/redigo) - A client library for Redis.
+- [rafaeljusto/redigomock](https://godoc.org/github.com/rafaeljusto/redigomock) - A mock library for RediGo.
 - [chasex/redis-go-cluster](https://github.com/chasex/redis-go-cluster) - A Redis cluster client implementation.
 - [FZambia/go-sentinel](https://github.com/FZambia/go-sentinel) - Redis Sentinel support for RedisGo-Async
 - [PuerkitoBio/redisc](https://github.com/PuerkitoBio/redisc) - Redis Cluster client built on top of RedisGo-Async
