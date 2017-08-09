@@ -1,10 +1,10 @@
 package main
 
 import (
-	"common/RedisGo-Async/redis"
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/gistao/RedisGo-Async/redis"
 	"log"
 	"runtime"
 	"sync"

@@ -19,7 +19,7 @@ import (
 	"reflect"
 	"testing"
 
-	"common/RedisGo-Async/redis"
+	"github.com/gistao/RedisGo-Async/redis"
 )
 
 type valueError struct {

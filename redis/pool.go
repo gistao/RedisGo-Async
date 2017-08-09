@@ -25,7 +25,7 @@ import (
 	"sync"
 	"time"
 
-	"common/RedisGo-Async/internal"
+	"github.com/gistao/RedisGo-Async/internal"
 )
 
 var nowFunc = time.Now // for testing

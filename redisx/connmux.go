@@ -18,8 +18,8 @@ import (
 	"errors"
 	"sync"
 
-	"common/RedisGo-Async/internal"
-	"common/RedisGo-Async/redis"
+	"github.com/gistao/RedisGo-Async/internal"
+	"github.com/gistao/RedisGo-Async/redis"
 )
 
 // ConnMux multiplexes one or more connections to a single underlying

@@ -20,7 +20,7 @@ import (
 	"testing"
 	"time"
 
-	"common/RedisGo-Async/redis"
+	"github.com/gistao/RedisGo-Async/redis"
 )
 
 var (

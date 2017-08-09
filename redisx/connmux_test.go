@@ -19,9 +19,9 @@ import (
 	"sync"
 	"testing"
 
-	"common/RedisGo-Async/internal/redistest"
-	"common/RedisGo-Async/redis"
-	"common/RedisGo-Async/redisx"
+	"github.com/gistao/RedisGo-Async/internal/redistest"
+	"github.com/gistao/RedisGo-Async/redis"
+	"github.com/gistao/RedisGo-Async/redisx"
 )
 
 func TestConnMux(t *testing.T) {

@@ -17,7 +17,7 @@ package redis_test
 import (
 	"fmt"
 
-	"common/RedisGo-Async/redis"
+	"github.com/gistao/RedisGo-Async/redis"
 )
 
 // zpop pops a value from the ZSET key using WATCH/MULTI/EXEC commands.
