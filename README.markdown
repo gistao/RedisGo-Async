@@ -19,10 +19,12 @@ Related Projects
 - [FZambia/go-sentinel](https://github.com/FZambia/go-sentinel) - Redis Sentinel support for RedisGo-Async
 - [PuerkitoBio/redisc](https://github.com/PuerkitoBio/redisc) - Redis Cluster client built on top of RedisGo-Async
 
+
 Contributing
 ------------
 
-See [CONTRIBUTING.md](https://github.com/garyburd/RedisGo-Async/blob/master/.github/CONTRIBUTING.md).
+* garyburd(https://github.com/garyburd).
+* xiaofei(https://github.com/feibulei).
 
 License
 -------
