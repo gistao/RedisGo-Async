@@ -1,29 +1,17 @@
 package main
 
 import (
+	"common/RedisGo-Async/client"
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/gistao/RedisGo-Async/redis"
 	"log"
 	"runtime"
-	"sync"
 	"time"
 )
 
-type redisClient struct {
-	//pool *redis.Pool
-	pool    *redis.AsyncPool
-	Address string
-}
-
-var (
-	redisMap map[string]*redisClient
-	mapMutex *sync.RWMutex
-)
-
 // redis task function type def
-type redisTask func(id string, signal chan int, cli *redisClient, iterations int)
+type redisTask func(id string, signal chan int, cli *client.AsynClient, iterations int)
 
 // task info
 type taskSpec struct {
@@ -37,28 +25,24 @@ type taskSpec struct {
 var tasks = []taskSpec{
 	taskSpec{doSet, "SET"},
 	taskSpec{doGet, "GET"},
+	taskSpec{doDel, "DEL"},
 }
 
 // workers option.  default is equiv to -w=10000 on command line
 var workers = flag.Int("w", 10000, "number of concurrent workers")
 
 // opcnt option.  default is equiv to -n=20 on command line
-var opcnt = flag.Int("n", 100, "number of task iterations per worker")
+var opcnt = flag.Int("n", 1000, "number of task iterations per worker")
 
 // ----------------------------------------------------------------------------
 // benchmarker
 // ----------------------------------------------------------------------------
 
-func init() {
-	redisMap = make(map[string]*redisClient)
-	mapMutex = new(sync.RWMutex)
-}
-
 func main() {
 	// DEBUG
 	runtime.GOMAXPROCS(2)
 
-	log.SetPrefix("[RedisGo-Async|example] ")
+	log.SetPrefix("[RedisGo-Async|async bench] ")
 	flag.Parse()
 
 	fmt.Printf("\n\n== Bench RedisGo-Async == %d goroutines 1 AsyncClient  -- %d opts each --- \n\n", *workers, *opcnt)
@@ -73,7 +57,7 @@ func benchTask(taskspec taskSpec, iterations int, workers int, printReport bool)
 
 	signal := make(chan int, workers)
 
-	rdc := getRedisClient("127.0.0.1:6379")
+	rdc := client.GetAsynClient("127.0.0.1:6379")
 	if rdc == nil {
 		log.Println("Error creating client for worker")
 		return -1, errors.New("Error creating client for worker")
@@ -109,7 +93,7 @@ func report(cmd string, workers int, delta time.Duration, cnt int) {
 // redis tasks
 // ----------------------------------------------------------------------------
 
-func doSet(id string, signal chan int, cli *redisClient, cnt int) {
+func doSet(id string, signal chan int, cli *client.AsynClient, cnt int) {
 	key := "set-" + id
 	value := "foo"
 	for i := 0; i < cnt; i++ {
@@ -122,7 +106,8 @@ func doSet(id string, signal chan int, cli *redisClient, cnt int) {
 	}
 	signal <- 1
 }
-func doGet(id string, signal chan int, cli *redisClient, cnt int) {
+
+func doGet(id string, signal chan int, cli *client.AsynClient, cnt int) {
 	key := "set-" + id
 	for i := 0; i < cnt; i++ {
 		//	log.Println("get", key)
@@ -134,61 +119,13 @@ func doGet(id string, signal chan int, cli *redisClient, cnt int) {
 	signal <- 1
 }
 
-/*func newPool(addr string) *redis.Pool {
-	return &redis.Pool{
-		MaxIdle:     100,
-		MaxActive:   100,
-		IdleTimeout: time.Minute * 1,
-		Wait:        true,
-		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", addr)
-			return c, err
-		},
-	}
-}*/
-
-func newAsyncPool(addr string) *redis.AsyncPool {
-	return &redis.AsyncPool{
-		Dial: func() (redis.AsynConn, error) {
-			c, err := redis.AsyncDial("tcp", addr)
-			return c, err
-		},
-	}
-}
-
-func getRedisClient(address string) *redisClient {
-	var redis *redisClient
-	var mok bool
-	mapMutex.RLock()
-	redis, mok = redisMap[address]
-	mapMutex.RUnlock()
-	if !mok {
-		mapMutex.Lock()
-		redis, mok = redisMap[address]
-		if !mok {
-			//redis = &redisClient{Address: address, pool: newPool(address)}
-			redis = &redisClient{Address: address, pool: newAsyncPool(address)}
-			redisMap[address] = redis
+func doDel(id string, signal chan int, cli *client.AsynClient, cnt int) {
+	key := "set-" + id
+	for i := 0; i < cnt; i++ {
+		_, err := cli.Del(key)
+		if err != nil {
+			log.Println(err)
 		}
-		mapMutex.Unlock()
 	}
-	return redis
-}
-
-func (rc *redisClient) Get(key string) (string, error) {
-	conn := rc.pool.Get()
-	defer conn.Close()
-	reply, errDo := conn.Do("GET", key)
-	if errDo == nil && reply == nil {
-		return "", nil
-	}
-	val, err := redis.String(reply, errDo)
-	return val, err
-}
-
-func (rc *redisClient) Set(key string, val string) (string, error) {
-	conn := rc.pool.Get()
-	defer conn.Close()
-	val, err := redis.String(conn.Do("SET", key, val))
-	return val, err
+	signal <- 1
 }
