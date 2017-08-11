@@ -1,0 +1,148 @@
+跨机房
+[root@yhg192 asyncbench]# go run asyncbench.go
+== Bench RedisGo-Async == 1000 goroutines 1 AsyncClient  -- 10000 opts each ---
+
+[RedisGo-Async|async bench] 2017/08/11 14:48:12 ---
+[RedisGo-Async|async bench] 2017/08/11 14:48:12 cmd: SET
+[RedisGo-Async|async bench] 2017/08/11 14:48:12 1000 goroutines 1 asyncClient 10000000 iterations of SET in 28125 msecs
+[RedisGo-Async|async bench] 2017/08/11 14:48:12 ---
+
+[RedisGo-Async|async bench] 2017/08/11 14:48:42 ---
+[RedisGo-Async|async bench] 2017/08/11 14:48:42 cmd: GET
+[RedisGo-Async|async bench] 2017/08/11 14:48:42 1000 goroutines 1 asyncClient 10000000 iterations of GET in 29519 msecs
+[RedisGo-Async|async bench] 2017/08/11 14:48:42 ---
+
+[RedisGo-Async|async bench] 2017/08/11 14:49:10 ---
+[RedisGo-Async|async bench] 2017/08/11 14:49:10 cmd: DEL
+[RedisGo-Async|async bench] 2017/08/11 14:49:10 1000 goroutines 1 asyncClient 10000000 iterations of DEL in 27918 msecs
+[RedisGo-Async|async bench] 2017/08/11 14:49:10 ---
+
+[root@yhg192 syncbench]# go run syncbench.go
+== Bench RedisGo-Async == 1000 goroutines max 100 SyncClient  -- 10000 opts each ---
+
+[RedisGo-Async|sync bench] 2017/08/11 14:54:07 ---
+[RedisGo-Async|sync bench] 2017/08/11 14:54:07 cmd: SET
+[RedisGo-Async|sync bench] 2017/08/11 14:54:07 1000 goroutines max 100 syncClient 10000000 iterations of SET in 113115 msecs
+[RedisGo-Async|sync bench] 2017/08/11 14:54:07 ---
+
+[RedisGo-Async|sync bench] 2017/08/11 14:56:01 ---
+[RedisGo-Async|sync bench] 2017/08/11 14:56:01 cmd: GET
+[RedisGo-Async|sync bench] 2017/08/11 14:56:01 1000 goroutines max 100 syncClient 10000000 iterations of GET in 113236 msecs
+[RedisGo-Async|sync bench] 2017/08/11 14:56:01 ---
+
+[RedisGo-Async|sync bench] 2017/08/11 14:57:54 ---
+[RedisGo-Async|sync bench] 2017/08/11 14:57:54 cmd: DEL
+[RedisGo-Async|sync bench] 2017/08/11 14:57:54 1000 goroutines max 100 syncClient 10000000 iterations of DEL in 113838 msecs
+[RedisGo-Async|sync bench] 2017/08/11 14:57:54 ---
+
+本机(192)
+[root@yhg192 asyncbench]# go run asyncbench.go
+== Bench RedisGo-Async == 1000 goroutines 1 AsyncClient  -- 10000 opts each ---
+
+[RedisGo-Async|async bench] 2017/08/11 15:03:55 ---
+[RedisGo-Async|async bench] 2017/08/11 15:03:55 cmd: SET
+[RedisGo-Async|async bench] 2017/08/11 15:03:55 1000 goroutines 1 asyncClient 10000000 iterations of SET in 30052 msecs
+[RedisGo-Async|async bench] 2017/08/11 15:03:55 ---
+
+[RedisGo-Async|async bench] 2017/08/11 15:04:26 ---
+[RedisGo-Async|async bench] 2017/08/11 15:04:26 cmd: GET
+[RedisGo-Async|async bench] 2017/08/11 15:04:26 1000 goroutines 1 asyncClient 10000000 iterations of GET in 31396 msecs
+[RedisGo-Async|async bench] 2017/08/11 15:04:26 ---
+
+[RedisGo-Async|async bench] 2017/08/11 15:04:54 ---
+[RedisGo-Async|async bench] 2017/08/11 15:04:54 cmd: DEL
+[RedisGo-Async|async bench] 2017/08/11 15:04:54 1000 goroutines 1 asyncClient 10000000 iterations of DEL in 27999 msecs
+[RedisGo-Async|async bench] 2017/08/11 15:04:54 ---
+
+[root@yhg192 syncbench]# go run syncbench.go
+== Bench RedisGo-Async == 1000 goroutines max 100 SyncClient  -- 10000 opts each ---
+
+[RedisGo-Async|sync bench] 2017/08/11 15:00:06 ---
+[RedisGo-Async|sync bench] 2017/08/11 15:00:06 cmd: SET
+[RedisGo-Async|sync bench] 2017/08/11 15:00:06 1000 goroutines max 100 syncClient 10000000 iterations of SET in 80940 msecs
+[RedisGo-Async|sync bench] 2017/08/11 15:00:06 ---
+
+[RedisGo-Async|sync bench] 2017/08/11 15:01:27 ---
+[RedisGo-Async|sync bench] 2017/08/11 15:01:27 cmd: GET
+[RedisGo-Async|sync bench] 2017/08/11 15:01:27 1000 goroutines max 100 syncClient 10000000 iterations of GET in 80731 msecs
+[RedisGo-Async|sync bench] 2017/08/11 15:01:27 ---
+
+[RedisGo-Async|sync bench] 2017/08/11 15:02:45 ---
+[RedisGo-Async|sync bench] 2017/08/11 15:02:45 cmd: DEL
+[RedisGo-Async|sync bench] 2017/08/11 15:02:45 1000 goroutines max 100 syncClient 10000000 iterations of DEL in 77966 msecs
+[RedisGo-Async|sync bench] 2017/08/11 15:02:45 ---
+
+
+redis-benchmark 本机
+[root@yhg192 src]# ./redis-benchmark -n 10000000 -t set,get
+====== SET ======
+  10000000 requests completed in 106.97 seconds
+  50 parallel clients
+  3 bytes payload
+  keep alive: 1
+
+100.00% <= 1 milliseconds
+100.00% <= 2 milliseconds
+100.00% <= 3 milliseconds
+100.00% <= 3 milliseconds
+93484.16 requests per second
+
+====== GET ======
+  10000000 requests completed in 108.85 seconds
+  50 parallel clients
+  3 bytes payload
+  keep alive: 1
+
+100.00% <= 1 milliseconds
+100.00% <= 2 milliseconds
+100.00% <= 3 milliseconds
+100.00% <= 3 milliseconds
+91872.08 requests per second
+
+redis-benchmark 跨机房
+[root@yhg192 src]# ./redis-benchmark -h 10.13.112.152 -p 6379 -n 10000000 -t set,get
+====== SET ======
+  10000000 requests completed in 205.67 seconds
+  50 parallel clients
+  3 bytes payload
+  keep alive: 1
+
+62.65% <= 1 milliseconds
+99.79% <= 2 milliseconds
+99.86% <= 3 milliseconds
+99.91% <= 4 milliseconds
+99.93% <= 5 milliseconds
+99.95% <= 6 milliseconds
+99.96% <= 7 milliseconds
+99.97% <= 8 milliseconds
+99.98% <= 9 milliseconds
+99.99% <= 10 milliseconds
+99.99% <= 11 milliseconds
+100.00% <= 12 milliseconds
+100.00% <= 201 milliseconds
+100.00% <= 202 milliseconds
+100.00% <= 202 milliseconds
+48621.11 requests per second
+
+====== GET ======
+  10000000 requests completed in 204.60 seconds
+  50 parallel clients
+  3 bytes payload
+  keep alive: 1
+
+66.07% <= 1 milliseconds
+99.87% <= 2 milliseconds
+99.93% <= 3 milliseconds
+99.96% <= 4 milliseconds
+99.98% <= 5 milliseconds
+99.99% <= 6 milliseconds
+99.99% <= 7 milliseconds
+99.99% <= 8 milliseconds
+100.00% <= 9 milliseconds
+100.00% <= 10 milliseconds
+100.00% <= 11 milliseconds
+100.00% <= 12 milliseconds
+100.00% <= 201 milliseconds
+100.00% <= 202 milliseconds
+100.00% <= 203 milliseconds
+48874.90 requests per second
