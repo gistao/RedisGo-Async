@@ -1,7 +1,7 @@
 package client
 
 import (
-	"common/RedisGo-Async/redis"
+	"github.com/gistao/RedisGo-Async/redis"
 	"sync"
 )
 
