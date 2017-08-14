@@ -189,9 +189,9 @@ func (c *asynConn) doReply() {
 		} else {
 			c.t = nowFunc()
 		}
-		/*if e, ok := reply.(Error); ok && e == nil {
+		if e, ok := reply.(Error); ok && e == nil {
 			err = e
-		}*/
+		}
 		rep.c <- &tResult{reply, err}
 	}
 }
