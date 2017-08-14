@@ -146,7 +146,10 @@ func (c *asynConn) Close() error {
 func (c *asynConn) doRequest() {
 	reqs := make([]*tRequest, 0, 1000)
 	for {
-		req := <-c.reqChan
+		req, ok := <-c.reqChan
+		if !ok {
+			break
+		}
 		for i, length := 0, len(c.reqChan); ; {
 			if c.writeTimeout != 0 {
 				c.conn.conn.SetWriteDeadline(time.Now().Add(c.writeTimeout))
@@ -177,7 +180,10 @@ func (c *asynConn) doRequest() {
 
 func (c *asynConn) doReply() {
 	for {
-		rep := <-c.repChan
+		rep, ok := <-c.repChan
+		if !ok {
+			break
+		}
 		if c.readTimeout != 0 {
 			c.conn.conn.SetReadDeadline(time.Now().Add(c.readTimeout))
 		}
