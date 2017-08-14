@@ -1,4 +1,4 @@
-RedisGo-Async
+ RedisGo-Async
 ======
 
 Features
@@ -40,9 +40,7 @@ The Go distribution is RedisGo-Async's only dependency.
 
 Benchmark Test
 ------------
-![cross idc](https://github.com/gistao/RedisGo-Async/blob/master/bench/maxrtt.png "Title")
-
-![local host](https://github.com/gistao/RedisGo-Async/blob/master/bench/minrtt.png "Title")
+![bench report](https://github.com/gistao/RedisGo-Async/blob/master/bench/bench.png "Title")
 
 
 Related Projects
