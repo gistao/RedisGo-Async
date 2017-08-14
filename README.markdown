@@ -1,6 +1,33 @@
 RedisGo-Async
 ======
 
+Features
+------------
+
+* ### asynchronous(only one connection)
+  1.A Print-like API with support for all Redis commands.
+
+  2.Pipelining
+  
+  3.Script helper type with optimistic use of EVALSHA.
+  
+  4.Transactions limited support.
+
+  5.Helper functions for working with command replies.
+
+
+* ### synchronous(connection pool)
+  1.A Print-like API with support for all Redis commands.
+
+  2.Pipelining
+  
+  3.Publish/Subscribe 
+  
+  4.Script helper type with optimistic use of EVALSHA.
+  
+  5.Helper functions for working with command replies.
+  
+
 Installation
 ------------
 
@@ -10,14 +37,18 @@ Install RedisGo-Async using the "go get" command:
 
 The Go distribution is RedisGo-Async's only dependency.
 
+
+Benchmark Test
+------------
+![cross idc](https://github.com/gistao/RedisGo-Async/blob/master/bench/maxrtt.png "Title")
+
+![local host](https://github.com/gistao/RedisGo-Async/blob/master/bench/minrtt.png "Title")
+
+
 Related Projects
 ----------------
 
 - [garyburd/redigo](https://github.com/garyburd/redigo) - A client library for Redis.
-- [rafaeljusto/redigomock](https://godoc.org/github.com/rafaeljusto/redigomock) - A mock library for RediGo.
-- [chasex/redis-go-cluster](https://github.com/chasex/redis-go-cluster) - A Redis cluster client implementation.
-- [FZambia/go-sentinel](https://github.com/FZambia/go-sentinel) - Redis Sentinel support for RedisGo-Async
-- [PuerkitoBio/redisc](https://github.com/PuerkitoBio/redisc) - Redis Cluster client built on top of RedisGo-Async
 
 
 Contributing
@@ -25,6 +56,7 @@ Contributing
 
 * garyburd(https://github.com/garyburd).
 * xiaofei(https://github.com/feibulei).
+
 
 License
 -------
