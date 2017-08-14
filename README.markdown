@@ -26,6 +26,7 @@ Features
   4.Script helper type with optimistic use of EVALSHA.
   
   5.Helper functions for working with command replies.
+  
 
 Installation
 ------------
@@ -35,6 +36,14 @@ Install RedisGo-Async using the "go get" command:
     go get github.com/gistao/RedisGo-Async/redis
 
 The Go distribution is RedisGo-Async's only dependency.
+
+
+Benchmark Test
+------------
+![cross idc](https://github.com/gistao/RedisGo-Async/blob/master/bench/maxrtt.png "Title")
+
+![local host](https://github.com/gistao/RedisGo-Async/blob/master/bench/minrtt.png "Title")
+
 
 Related Projects
 ----------------
@@ -47,6 +56,7 @@ Contributing
 
 * garyburd(https://github.com/garyburd).
 * xiaofei(https://github.com/feibulei).
+
 
 License
 -------
