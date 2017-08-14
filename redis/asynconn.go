@@ -45,9 +45,11 @@ type asyncRet struct {
 // conn is the low-level implementation of Conn
 type asynConn struct {
 	*conn
-	t       time.Time
-	reqChan chan *tRequest
-	repChan chan *tReply
+	t            time.Time
+	reqChan      chan *tRequest
+	repChan      chan *tReply
+	closeReqChan chan bool
+	closeRepChan chan bool
 }
 
 // AsyncDialTimeout acts like AsyncDial but takes timeouts for establishing the
@@ -102,6 +104,11 @@ func (c *asynConn) Do(cmd string, args ...interface{}) (interface{}, error) {
 	if cmd == "" {
 		return nil, errors.New("RedisGo-Async: empty command")
 	}
+
+	if c.Err() != nil {
+		return nil, c.Err()
+	}
+
 	retChan := make(chan *tResult, 2)
 
 	c.reqChan <- &tRequest{cmd: cmd, args: args, c: retChan}
@@ -120,6 +127,10 @@ func (c *asynConn) AsyncDo(cmd string, args ...interface{}) (AsyncRet, error) {
 		return nil, errors.New("RedisGo-Async: empty command")
 	}
 
+	if c.Err() != nil {
+		return nil, c.Err()
+	}
+
 	retChan := make(chan *tResult, 2)
 
 	c.reqChan <- &tRequest{cmd: cmd, args: args, c: retChan}
@@ -132,13 +143,12 @@ func (c *asynConn) AsyncDo(cmd string, args ...interface{}) (AsyncRet, error) {
 }
 
 func (c *asynConn) Close() error {
-	close(c.reqChan)
-	close(c.repChan)
-
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	err := c.err
 	if c.err == nil {
-		c.err = errors.New("RedisGo-Async: closed")
-		err = c.conn.Close()
+		c.closeReqChan <- true
+		c.closeRepChan <- true
 	}
 	return err
 }
@@ -146,25 +156,29 @@ func (c *asynConn) Close() error {
 func (c *asynConn) doRequest() {
 	reqs := make([]*tRequest, 0, 1000)
 	for {
-		req, ok := <-c.reqChan
-		if !ok {
-			break
+		select {
+		case <-c.closeReqChan:
+			c.fatal(errors.New("RedisGo-Async: closed"))
+			close(c.reqChan)
+			return
+		case req := <-c.reqChan:
+			for i, length := 0, len(c.reqChan); ; {
+				if c.writeTimeout != 0 {
+					c.conn.conn.SetWriteDeadline(time.Now().Add(c.writeTimeout))
+				}
+				if err := c.writeCommand(req.cmd, req.args); err != nil {
+					req.c <- &tResult{nil, err}
+					// TODO
+					break
+				}
+				reqs = append(reqs, req)
+				if i++; i > length || c.bw.Buffered() >= 4096 {
+					break
+				}
+				req = <-c.reqChan
+			}
 		}
-		for i, length := 0, len(c.reqChan); ; {
-			if c.writeTimeout != 0 {
-				c.conn.conn.SetWriteDeadline(time.Now().Add(c.writeTimeout))
-			}
-			if err := c.writeCommand(req.cmd, req.args); err != nil {
-				req.c <- &tResult{nil, err}
-				// TODO
-				break
-			}
-			reqs = append(reqs, req)
-			if i++; i > length || c.bw.Buffered() >= 4096 {
-				break
-			}
-			req = <-c.reqChan
-		}
+
 		err := c.bw.Flush()
 		for i := range reqs {
 			reqs[i].c <- &tResult{nil, err}
@@ -180,25 +194,27 @@ func (c *asynConn) doRequest() {
 
 func (c *asynConn) doReply() {
 	for {
-		rep, ok := <-c.repChan
-		if !ok {
-			break
+		select {
+		case <-c.closeRepChan:
+			close(c.repChan)
+			return
+		case rep := <-c.repChan:
+			if c.readTimeout != 0 {
+				c.conn.conn.SetReadDeadline(time.Now().Add(c.readTimeout))
+			}
+			reply, err := c.readReply()
+			if err != nil {
+				rep.c <- &tResult{nil, c.fatal(err)}
+				// TODO
+				continue
+			} else {
+				c.t = nowFunc()
+			}
+			if e, ok := reply.(Error); ok {
+				err = e
+			}
+			rep.c <- &tResult{reply, err}
 		}
-		if c.readTimeout != 0 {
-			c.conn.conn.SetReadDeadline(time.Now().Add(c.readTimeout))
-		}
-		reply, err := c.readReply()
-		if err != nil {
-			rep.c <- &tResult{nil, c.fatal(err)}
-			// TODO
-			continue
-		} else {
-			c.t = nowFunc()
-		}
-		if e, ok := reply.(Error); ok {
-			err = e
-		}
-		rep.c <- &tResult{reply, err}
 	}
 }
 
