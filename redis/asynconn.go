@@ -50,6 +50,7 @@ type asynConn struct {
 	repChan      chan *tReply
 	closeReqChan chan bool
 	closeRepChan chan bool
+	closed       bool
 }
 
 // AsyncDialTimeout acts like AsyncDial but takes timeouts for establishing the
@@ -139,27 +140,18 @@ func (c *asynConn) Close() error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	err := c.err
-	if c.err == nil {
-		c.err = errors.New("RedisGo-Async: closed")
-		err = c.conn.Close()
+	if c.closed {
+		return nil
+	}
+	c.closed = true
 
+	go func() {
+		time.Sleep(10 * time.Minute)
 		c.closeReqChan <- true
-	}
+	}()
 
-	return err
-}
-
-func (c *asynConn) close() error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	if c.conn != nil {
-		err := c.conn.Close()
-		c.conn = nil
-		return err
-	}
-	return nil
+	c.err = errors.New("RedisGo-Async: closed")
+	return c.conn.Close()
 }
 
 func (c *asynConn) doRequest() {
