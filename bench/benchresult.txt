@@ -1,4 +1,4 @@
-跨机房
+<----------------------------------------------------cross idc
 [root@yhg192 asyncbench]# go run asyncbench.go
 == Bench RedisGo-Async == 1000 goroutines 1 AsyncClient  -- 10000 opts each ---
 
@@ -35,7 +35,7 @@
 [RedisGo-Async|sync bench] 2017/08/11 14:57:54 1000 goroutines max 100 syncClient 10000000 iterations of DEL in 113838 msecs
 [RedisGo-Async|sync bench] 2017/08/11 14:57:54 ---
 
-本机(192)
+<----------------------------------------------------local host
 [root@yhg192 asyncbench]# go run asyncbench.go
 == Bench RedisGo-Async == 1000 goroutines 1 AsyncClient  -- 10000 opts each ---
 
@@ -73,7 +73,7 @@
 [RedisGo-Async|sync bench] 2017/08/11 15:02:45 ---
 
 
-redis-benchmark 本机
+<----------------------------------------------------redis-benchmark local host
 [root@yhg192 src]# ./redis-benchmark -n 10000000 -t set,get
 ====== SET ======
   10000000 requests completed in 106.97 seconds
@@ -99,7 +99,7 @@ redis-benchmark 本机
 100.00% <= 3 milliseconds
 91872.08 requests per second
 
-redis-benchmark 跨机房
+<----------------------------------------------------redis-benchmark cross idc
 [root@yhg192 src]# ./redis-benchmark -h 10.13.112.152 -p 6379 -n 10000000 -t set,get
 ====== SET ======
   10000000 requests completed in 205.67 seconds
