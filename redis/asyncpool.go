@@ -17,7 +17,6 @@ package redis
 import (
 	"errors"
 	"sync"
-	"time"
 )
 
 var errorCompatibility = errors.New("RedisGo-Async: should use Do func")
@@ -29,21 +28,15 @@ type AsyncPool struct {
 	//
 	// The connection returned from Dial must not be in a special state
 	// (subscribed to pubsub channel, transaction started, ...).
-	Dial func() (AsynConn, error)
-	// TestOnBorrow is an optional application supplied function for checking
-	// the health of an idle connection before the connection is used again by
-	// the application. Argument t is the time that the connection was returned
-	// to the pool. If the function returns an error, then the connection is
-	// closed.
-	TestOnBorrow func(c AsynConn, t time.Time) error
-	c            *asyncPoolConnection
-	mu           sync.Mutex
-	closed       bool
+	Dial   func() (AsynConn, error)
+	c      *asyncPoolConnection
+	mu     sync.Mutex
+	closed bool
 }
 
 // NewAsyncPool creates a new async pool.
-func NewAsyncPool(newFn func() (AsynConn, error), testFn func(AsynConn, time.Time) error) *AsyncPool {
-	return &AsyncPool{Dial: newFn, TestOnBorrow: testFn}
+func NewAsyncPool(newFn func() (AsynConn, error)) *AsyncPool {
+	return &AsyncPool{Dial: newFn}
 }
 
 // Get gets a connection. The application must close the returned connection.
@@ -60,14 +53,7 @@ func (p *AsyncPool) Get() AsynConn {
 	}
 
 	if p.c != nil {
-		if test := p.TestOnBorrow; test != nil {
-			ic := p.c.c.(*asynConn)
-			if test(p.c, ic.t) == nil {
-				return p.c
-			}
-		} else {
-			return p.c
-		}
+		return p.c
 	}
 
 	c, err := p.Dial()
