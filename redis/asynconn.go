@@ -151,7 +151,7 @@ func (c *asynConn) Close() error {
 	}()
 
 	c.err = errors.New("RedisGo-Async: closed")
-	return c.conn.Close()
+	return c.conn.conn.Close()
 }
 
 func (c *asynConn) doRequest() {
