@@ -169,7 +169,7 @@ func (c *asynConn) doRequest() {
 				}
 				if err := c.writeCommand(req.cmd, req.args); err != nil {
 					req.c <- &tResult{nil, err}
-					// TODO
+					c.fatal(err)
 					break
 				}
 				reqs = append(reqs, req)
@@ -184,7 +184,7 @@ func (c *asynConn) doRequest() {
 		for i := range reqs {
 			reqs[i].c <- &tResult{nil, err}
 			if err != nil {
-				// TODO
+				c.fatal(err)
 				continue
 			}
 			c.repChan <- &tReply{cmd: reqs[i].cmd, c: reqs[i].c}
@@ -206,7 +206,7 @@ func (c *asynConn) doReply() {
 			reply, err := c.readReply()
 			if err != nil {
 				rep.c <- &tResult{nil, c.fatal(err)}
-				// TODO
+				c.fatal(err)
 				continue
 			} else {
 				c.t = nowFunc()
