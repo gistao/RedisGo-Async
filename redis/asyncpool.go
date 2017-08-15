@@ -36,13 +36,9 @@ type AsyncPool struct {
 	// to the pool. If the function returns an error, then the connection is
 	// closed.
 	TestOnBorrow func(c AsynConn, t time.Time) error
-	// Close connections after remaining idle for this duration. If the value
-	// is zero, then idle connections are not closed. Applications should set
-	// the timeout to a value less than the server's timeout.
-	IdleTimeout time.Duration
-	c           *asyncPoolConnection
-	mu          sync.Mutex
-	closed      bool
+	c            *asyncPoolConnection
+	mu           sync.Mutex
+	closed       bool
 }
 
 // NewAsyncPool creates a new async pool.
@@ -63,27 +59,20 @@ func (p *AsyncPool) Get() AsynConn {
 		return errorConnection{errors.New("RedisGo-Async: get on closed pool")}
 	}
 
-	if p.c != nil && p.c.Err() == nil {
+	if p.c != nil {
 		if test := p.TestOnBorrow; test != nil {
 			ic := p.c.c.(*asynConn)
 			if test(p.c, ic.t) == nil {
 				return p.c
 			}
-			p.c.c.Close()
 		} else {
 			return p.c
 		}
-	} else if p.c != nil {
-		p.c.c.Close()
 	}
 
 	c, err := p.Dial()
 	if err != nil {
 		return errorConnection{err}
-	}
-
-	if p.IdleTimeout != 0 {
-		go p.doIdle()
 	}
 
 	p.c = &asyncPoolConnection{p: p, c: c}
@@ -119,29 +108,6 @@ func (p *AsyncPool) Close() error {
 	p.c = nil
 
 	return err
-}
-
-func (p *AsyncPool) doIdle() {
-	for {
-		<-time.After(time.Minute * 1)
-		p.mu.Lock()
-		if p.closed {
-			p.mu.Unlock()
-			break
-		}
-		if p.c == nil {
-			p.mu.Unlock()
-			continue
-		}
-		conn := p.c.c.(*asynConn)
-		if conn.t.Add(p.IdleTimeout).After(nowFunc()) {
-			p.mu.Unlock()
-			continue
-		}
-		p.c.c.Close()
-		p.c = nil
-		p.mu.Unlock()
-	}
 }
 
 type asyncPoolConnection struct {

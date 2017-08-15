@@ -87,10 +87,11 @@ func AsyncDialURL(rawurl string, options ...DialOption) (AsynConn, error) {
 
 func getAsynConn(conn *conn) (AsynConn, error) {
 	c := &asynConn{
-		conn:    conn,
-		reqChan: make(chan *tRequest, 10000),
-		repChan: make(chan *tReply, 10000),
-	}
+		conn:         conn,
+		reqChan:      make(chan *tRequest, 10000),
+		repChan:      make(chan *tReply, 10000),
+		closeReqChan: make(chan bool),
+		closeRepChan: make(chan bool)}
 
 	// request routine
 	go c.doRequest()
@@ -103,10 +104,6 @@ func getAsynConn(conn *conn) (AsynConn, error) {
 func (c *asynConn) Do(cmd string, args ...interface{}) (interface{}, error) {
 	if cmd == "" {
 		return nil, errors.New("RedisGo-Async: empty command")
-	}
-
-	if c.Err() != nil {
-		return nil, c.Err()
 	}
 
 	retChan := make(chan *tResult, 2)
@@ -127,10 +124,6 @@ func (c *asynConn) AsyncDo(cmd string, args ...interface{}) (AsyncRet, error) {
 		return nil, errors.New("RedisGo-Async: empty command")
 	}
 
-	if c.Err() != nil {
-		return nil, c.Err()
-	}
-
 	retChan := make(chan *tResult, 2)
 
 	c.reqChan <- &tRequest{cmd: cmd, args: args, c: retChan}
@@ -145,12 +138,28 @@ func (c *asynConn) AsyncDo(cmd string, args ...interface{}) (AsyncRet, error) {
 func (c *asynConn) Close() error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+
 	err := c.err
 	if c.err == nil {
+		c.err = errors.New("RedisGo-Async: closed")
+		err = c.conn.Close()
+
 		c.closeReqChan <- true
-		c.closeRepChan <- true
 	}
+
 	return err
+}
+
+func (c *asynConn) close() error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.conn != nil {
+		err := c.conn.Close()
+		c.conn = nil
+		return err
+	}
+	return nil
 }
 
 func (c *asynConn) doRequest() {
@@ -158,8 +167,8 @@ func (c *asynConn) doRequest() {
 	for {
 		select {
 		case <-c.closeReqChan:
-			c.fatal(errors.New("RedisGo-Async: closed"))
 			close(c.reqChan)
+			c.closeRepChan <- true
 			return
 		case req := <-c.reqChan:
 			for i, length := 0, len(c.reqChan); ; {
