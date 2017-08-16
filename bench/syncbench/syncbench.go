@@ -1,17 +1,30 @@
+// Copyright 2017 xiaofei, gistao
+//
+// Licensed under the Apache License, Version 2.0 (the "License"): you may
+// not use this file except in compliance with the License. You may obtain
+// a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+// WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+// License for the specific language governing permissions and limitations
+// under the License.
+
 package main
 
 import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/gistao/RedisGo-Async/client"
 	"log"
 	"runtime"
 	"time"
 )
 
 // redis task function type def
-type redisTask func(id string, signal chan int, cli *client.SynClient, iterations int)
+type redisTask func(id string, signal chan int, cli *SynClient, iterations int)
 
 // task info
 type taskSpec struct {
@@ -57,7 +70,7 @@ func benchTask(taskspec taskSpec, iterations int, workers int, printReport bool)
 
 	signal := make(chan int, workers)
 
-	rdc := client.GetSynClient("127.0.0.1:6379")
+	rdc := GetSynClient("127.0.0.1:6379")
 	if rdc == nil {
 		log.Println("Error creating client for worker")
 		return -1, errors.New("Error creating client for worker")
@@ -93,7 +106,7 @@ func report(cmd string, workers int, delta time.Duration, cnt int) {
 // redis tasks
 // ----------------------------------------------------------------------------
 
-func doSet(id string, signal chan int, cli *client.SynClient, cnt int) {
+func doSet(id string, signal chan int, cli *SynClient, cnt int) {
 	key := "set-" + id
 	value := "foo"
 	for i := 0; i < cnt; i++ {
@@ -107,7 +120,7 @@ func doSet(id string, signal chan int, cli *client.SynClient, cnt int) {
 	signal <- 1
 }
 
-func doGet(id string, signal chan int, cli *client.SynClient, cnt int) {
+func doGet(id string, signal chan int, cli *SynClient, cnt int) {
 	key := "set-" + id
 	for i := 0; i < cnt; i++ {
 		//	log.Println("get", key)
@@ -119,7 +132,7 @@ func doGet(id string, signal chan int, cli *client.SynClient, cnt int) {
 	signal <- 1
 }
 
-func doDel(id string, signal chan int, cli *client.SynClient, cnt int) {
+func doDel(id string, signal chan int, cli *SynClient, cnt int) {
 	key := "set-" + id
 	for i := 0; i < cnt; i++ {
 		_, err := cli.Del(key)
