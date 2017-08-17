@@ -22,7 +22,7 @@ import (
 
 var errorCompatibility = errors.New("RedisGo-Async: should use Do func")
 
-// AsyncPool maintains a pool of connections.
+// AsyncPool maintains one connection.
 type AsyncPool struct {
 	// Dial is an application supplied function for creating and configuring a
 	// connection.
@@ -46,11 +46,7 @@ func NewAsyncPool(newFn func() (AsynConn, error), testFn func(AsynConn, time.Tim
 	return &AsyncPool{Dial: newFn, TestOnBorrow: testFn}
 }
 
-// Get gets a connection. The application must close the returned connection.
-// This method always returns a valid connection so that applications can defer
-// error handling to the first use of the connection. If there is an error
-// getting an underlying connection, then the connection Err, Do, Send, Flush
-// and Receive methods return that error.
+// Get gets a connection.
 func (p *AsyncPool) Get() AsynConn {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -82,7 +78,7 @@ func (p *AsyncPool) Get() AsynConn {
 	return p.c
 }
 
-// ActiveCount returns the number of client of this pool. The count includes errorConnection.
+// ActiveCount returns the number of client of this pool.
 func (p *AsyncPool) ActiveCount() int {
 	p.mu.Lock()
 	defer p.mu.Unlock()

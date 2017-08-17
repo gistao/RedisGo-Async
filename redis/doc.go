@@ -1,4 +1,5 @@
 // Copyright 2012 Gary Burd
+// Copyright 2017 gistao
 //
 // Licensed under the Apache License, Version 2.0 (the "License"): you may
 // not use this file except in compliance with the License. You may obtain
@@ -12,20 +13,21 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-// Package redis is a client for the Redis database.
+// Package redis is a client for the Redis database.both asynchronous and synchronous modes
+// are supported,its API is fully compatible with redigo.
 //
-// The Redigo FAQ (https://github.com/garyburd/redigo/wiki/FAQ) contains more
+// The RedisGo-Async  FAQ (https://github.com/gistao/RedisGo-Async/wiki/FAQ) contains more
 // documentation about this package.
 //
 // Connections
 //
-// The Conn interface is the primary interface for working with Redis.
-// Applications create connections by calling the Dial, DialWithTimeout or
-// NewConn functions. In the future, functions will be added for creating
-// sharded and other types of connections.
+// In synchronous mode, this library creates a connection pool,
+// and then you can test to determine a maximum number of connections,
+// such as 100.
 //
-// The application must call the connection Close method when the application
-// is done with the connection.
+// In asynchronous mode, this library will only create a connection,
+// and you don't have to worry about performance issues,
+// nor do you have to spend a lot of time testing the number of connections.
 //
 // Executing Commands
 //
@@ -64,7 +66,7 @@
 //
 // Pipelining
 //
-// Connections support pipelining using the Send, Flush and Receive methods.
+// In synchronous mode, Connections support pipelining using the Send, Flush and Receive methods.
 //
 //  Send(commandName string, args ...interface{}) error
 //  Flush() error
@@ -80,22 +82,15 @@
 //  c.Receive() // reply from SET
 //  v, err = c.Receive() // reply from GET
 //
-// The Do method combines the functionality of the Send, Flush and Receive
-// methods. The Do method starts by writing the command and flushing the output
-// buffer. Next, the Do method receives all pending replies including the reply
-// for the command just sent by Do. If any of the received replies is an error,
-// then Do returns the error. If there are no errors, then Do returns the last
-// reply. If the command argument to the Do method is "", then the Do method
-// will flush the output buffer and receive pending replies without sending a
-// command.
+// In asynchronous mode, Connections support pipelining using the Do
 //
-// Use the Send and Do methods to implement pipelined transactions.
+//  AsyncDo(commandName string, args ...interface{}) (reply interface{}, err error)
 //
-//  c.Send("MULTI")
-//  c.Send("INCR", "foo")
-//  c.Send("INCR", "bar")
-//  r, err := c.Do("EXEC")
-//  fmt.Println(r) // prints [1, 1]
+// Above example
+//
+//  c.AsyncDo("SET", "foo", "bar")
+//  ret := c.AsyncDo("Get", "foo")
+//  v, err := ret.Get()
 //
 // Concurrency
 //
@@ -103,10 +98,7 @@
 // concurrent caller to the Send and Flush methods. No other concurrency is
 // supported including concurrent calls to the Do method.
 //
-// For full concurrent access to Redis, use the thread-safe Pool to get, use
-// and release a connection from within a goroutine. Connections returned from
-// a Pool have the concurrency restrictions described in the previous
-// paragraph.
+// For full concurrent access to Redis, use the thread-safe Pool to get.
 //
 // Publish and Subscribe
 //
@@ -139,6 +131,8 @@
 //          return v
 //      }
 //  }
+//
+// NOTE asynchronous mode does not support PUB/SUB
 //
 // Reply Helpers
 //

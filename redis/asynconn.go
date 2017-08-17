@@ -102,6 +102,7 @@ func getAsynConn(conn *conn) (AsynConn, error) {
 	return c, nil
 }
 
+// Do command to redis server,the goroutine of caller will be suspended.
 func (c *asynConn) Do(cmd string, args ...interface{}) (interface{}, error) {
 	if cmd == "" {
 		return nil, errors.New("RedisGo-Async: empty command")
@@ -120,6 +121,7 @@ func (c *asynConn) Do(cmd string, args ...interface{}) (interface{}, error) {
 	return ret.result, ret.err
 }
 
+// Do command to redis server,the goroutine of caller is not suspended.
 func (c *asynConn) AsyncDo(cmd string, args ...interface{}) (AsyncRet, error) {
 	if cmd == "" {
 		return nil, errors.New("RedisGo-Async: empty command")
