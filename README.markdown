@@ -1,5 +1,7 @@
- RedisGo-Async
+RedisGo-Async
 ======
+
+[![GoDoc](http://godoc.org/github.com/gistao/RedisGo-Async/redis?status.svg)](http://godoc.org/github.com/gistao/RedisGo-Async/redis)
 
 Features
 ------------
