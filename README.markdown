@@ -21,13 +21,13 @@ Features
 * ### synchronous(connection pool)
   1.A [Print-like](http://godoc.org/github.com/gistao/RedisGo-Async/redis#hdr-Executing_Commands) API with support for all Redis commands.
 
-  2.[Pipelining](http://godoc.org/github.com/gistao/RedisGo-Async/redis#hdr-Pipelining)
+   2.[Pipelining](http://godoc.org/github.com/gistao/RedisGo-Async/redis#hdr-Pipelining)
   
-  3.[Publish/Subscribe](http://godoc.org/github.com/gistao/RedisGo-Async/redis#hdr-Publish_and_Subscribe)
+   3.[Publish/Subscribe](http://godoc.org/github.com/gistao/RedisGo-Async/redis#hdr-Publish_and_Subscribe)
   
-  4.[Script helper type](http://godoc.org/github.com/gistao/RedisGo-Async/redis#Script) with optimistic use of EVALSHA.
+   4.[Script helper type](http://godoc.org/github.com/gistao/RedisGo-Async/redis#Script) with optimistic use of EVALSHA.
   
-  5.[Helper functions](http://godoc.org/github.com/gistao/RedisGo-Async/redis#hdr-Reply_Helpers) for working with command replies.
+   5.[Helper functions](http://godoc.org/github.com/gistao/RedisGo-Async/redis#hdr-Reply_Helpers) for working with command replies.
   
 
 Installation
