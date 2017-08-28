@@ -20,7 +20,7 @@ import (
 	"time"
 )
 
-var errorCompatibility = errors.New("RedisGo-Async: should use Do func")
+var errorCompatibility = errors.New("RedisGo-Async: should use AsyncDo func")
 
 // AsyncPool maintains one connection.
 type AsyncPool struct {
