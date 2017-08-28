@@ -1,35 +1,33 @@
- RedisGo-Async
-======
+## RedisGo-Async
 
-Features
-------------
+[![GoDoc](http://godoc.org/github.com/gistao/RedisGo-Async/redis?status.svg)](http://godoc.org/github.com/gistao/RedisGo-Async/redis)
 
-* ### asynchronous(only one connection)
-  1.A Print-like API with support for all Redis commands.
+## Features
+### asynchronous(only one connection)
+  * A [Print-like](http://godoc.org/github.com/gistao/RedisGo-Async/redis#hdr-Executing_Commands) API with support for all Redis commands.
 
-  2.Pipelining
+  * [Pipelining](http://godoc.org/github.com/gistao/RedisGo-Async/redis#hdr-Pipelining)
   
-  3.Script helper type with optimistic use of EVALSHA.
+  * [Script helper type](http://godoc.org/github.com/gistao/RedisGo-Async/redis#Script) with optimistic use of EVALSHA.
   
-  4.Transactions limited support.
+  * Transactions limited support.
 
-  5.Helper functions for working with command replies.
+  * [Helper functions](http://godoc.org/github.com/gistao/RedisGo-Async/redis#hdr-Reply_Helpers) for working with command replies.
 
 
-* ### synchronous(connection pool)
-  1.A Print-like API with support for all Redis commands.
+### synchronous(connection pool)
+  * [Print-like](http://godoc.org/github.com/gistao/RedisGo-Async/redis#hdr-Executing_Commands) API with support for all Redis commands.
 
-  2.Pipelining
+  * [Pipelining](http://godoc.org/github.com/gistao/RedisGo-Async/redis#hdr-Pipelining)
   
-  3.Publish/Subscribe 
+  * [Publish/Subscribe](http://godoc.org/github.com/gistao/RedisGo-Async/redis#hdr-Publish_and_Subscribe)
   
-  4.Script helper type with optimistic use of EVALSHA.
+  * [Script helper type](http://godoc.org/github.com/gistao/RedisGo-Async/redis#Script) with optimistic use of EVALSHA.
   
-  5.Helper functions for working with command replies.
+  * [Helper functions](http://godoc.org/github.com/gistao/RedisGo-Async/redis#hdr-Reply_Helpers) for working with command replies.
   
 
-Installation
-------------
+## Installation
 
 Install RedisGo-Async using the "go get" command:
 
@@ -38,20 +36,15 @@ Install RedisGo-Async using the "go get" command:
 The Go distribution is RedisGo-Async's only dependency.
 
 
-Benchmark Test
-------------
+## Benchmark Test
 ![bench report](https://github.com/gistao/RedisGo-Async/blob/master/bench/bench.png "Title")
 
 
-Related Projects
-----------------
-
+## Related Projects
 - [garyburd/redigo](https://github.com/garyburd/redigo) - A client library for Redis.
 
 
-Contributing
-------------
-
+## Contributing
 * garyburd(https://github.com/garyburd).
 * xiaofei(https://github.com/feibulei).
 
