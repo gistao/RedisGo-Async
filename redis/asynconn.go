@@ -131,10 +131,6 @@ func (c *asynConn) AsyncDo(cmd string, args ...interface{}) (AsyncRet, error) {
 
 	c.reqChan <- &tRequest{cmd: cmd, args: args, c: retChan}
 
-	ret := <-retChan
-	if ret.err != nil {
-		return nil, ret.err
-	}
 	return &asyncRet{c: retChan}, nil
 }
 
@@ -222,11 +218,12 @@ func (c *asynConn) doReply() {
 }
 
 // Get get command result asynchronously
-func (a *asyncRet) Get(timeout time.Duration) (interface{}, error) {
-	select {
-	case ret := <-a.c:
-		return ret.result, ret.err
-	case <-time.After(timeout):
-		return nil, errors.New("RedisGo-Async: async get time out")
+func (a *asyncRet) Get() (interface{}, error) {
+	send := <-a.c
+	if send.err != nil {
+		return send.result, send.err
 	}
+
+	recv := <-a.c
+	return recv.result, recv.err
 }

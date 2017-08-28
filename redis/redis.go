@@ -14,10 +14,6 @@
 
 package redis
 
-import (
-	"time"
-)
-
 // Error represents an error returned in a command reply.
 type Error string
 
@@ -47,7 +43,7 @@ type Conn interface {
 // AsyncRet represents a return value of AsyncDo
 type AsyncRet interface {
 	// Get get a command result asynchronously
-	Get(timeout time.Duration) (reply interface{}, err error)
+	Get() (reply interface{}, err error)
 }
 
 // AsynConn represents a aync connection to a Redis server.
