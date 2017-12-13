@@ -89,8 +89,8 @@ func AsyncDialURL(rawurl string, options ...DialOption) (AsynConn, error) {
 func getAsynConn(conn *conn) (AsynConn, error) {
 	c := &asynConn{
 		conn:         conn,
-		reqChan:      make(chan *tRequest, 10000),
-		repChan:      make(chan *tReply, 10000),
+		reqChan:      make(chan *tRequest, 1000),
+		repChan:      make(chan *tReply, 1000),
 		closeReqChan: make(chan bool),
 		closeRepChan: make(chan bool)}
 
