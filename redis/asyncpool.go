@@ -36,9 +36,17 @@ type AsyncPool struct {
 	// to the pool. If the function returns an error, then the connection is
 	// closed.
 	TestOnBorrow func(c AsynConn, t time.Time) error
-	c            *asyncPoolConnection
-	mu           sync.Mutex
-	closed       bool
+
+	Wait bool
+
+	MaxWaitCount int
+
+	c         *asyncPoolConnection
+	mu        sync.Mutex
+	cond      *sync.Cond
+	waitCount int
+	closed    bool
+	blocking  bool
 }
 
 // NewAsyncPool creates a new async pool.
@@ -49,33 +57,72 @@ func NewAsyncPool(newFn func() (AsynConn, error), testFn func(AsynConn, time.Tim
 // Get gets a connection.
 func (p *AsyncPool) Get() AsynConn {
 	p.mu.Lock()
-	defer p.mu.Unlock()
 
-	if p.closed {
-		return errorConnection{errors.New("RedisGo-Async: get on closed pool")}
-	}
+	for {
+		if p.closed {
+			p.mu.Unlock()
+			return errorConnection{errors.New("RedisGo-Async: get on closed pool")}
+		}
 
-	if p.c != nil && p.c.Err() == nil {
-		if test := p.TestOnBorrow; test != nil {
-			ic := p.c.c.(*asynConn)
-			if test(p.c, ic.t) == nil {
+		if p.Wait && p.cond == nil {
+			p.cond = sync.NewCond(&p.mu)
+		}
+
+		if p.blocking {
+			if p.Wait && (p.MaxWaitCount == 0 || p.waitCount < p.MaxWaitCount) {
+				p.waitCount++
+				p.cond.Wait()
+				p.waitCount--
+				continue
+			}
+			p.mu.Unlock()
+			return errorConnection{errors.New("RedisGo-Async: pool is blocking")}
+		}
+
+		if p.c != nil && p.c.Err() == nil {
+			if test := p.TestOnBorrow; test != nil {
+				p.blocking = true
+				ic := p.c.c.(*asynConn)
+				p.mu.Unlock()
+				err := test(p.c, ic.t)
+				p.mu.Lock()
+				p.blocking = false
+				if err == nil {
+					if p.cond != nil {
+						p.cond.Broadcast()
+					}
+					p.mu.Unlock()
+					return p.c
+				}
+				p.c.c.Close()
+			} else {
+				p.mu.Unlock()
 				return p.c
 			}
+		} else if p.c != nil {
 			p.c.c.Close()
-		} else {
-			return p.c
 		}
-	} else if p.c != nil {
-		p.c.c.Close()
-	}
 
-	c, err := p.Dial()
-	if err != nil {
-		return errorConnection{err}
-	}
+		p.blocking = true
+		p.mu.Unlock()
+		c, err := p.Dial()
+		p.mu.Lock()
+		p.blocking = false
+		if err != nil {
+			if p.cond != nil {
+				p.cond.Signal()
+			}
+			p.mu.Unlock()
+			return errorConnection{err}
+		}
+		p.c = &asyncPoolConnection{p: p, c: c}
+		if p.cond != nil {
+			p.cond.Broadcast()
+		}
+		p.mu.Unlock()
 
-	p.c = &asyncPoolConnection{p: p, c: c}
-	return p.c
+		return p.c
+	}
 }
 
 // ActiveCount returns the number of client of this pool.
@@ -103,6 +150,9 @@ func (p *AsyncPool) Close() error {
 		return nil
 	}
 	p.closed = true
+	if p.cond != nil {
+		p.cond.Broadcast()
+	}
 	err := p.c.c.Close()
 	p.c = nil
 

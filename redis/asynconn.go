@@ -16,7 +16,7 @@ package redis
 
 import (
 	"errors"
-	"fmt"
+	// "fmt"
 	"time"
 )
 
@@ -114,7 +114,7 @@ func (c *asynConn) Do(cmd string, args ...interface{}) (interface{}, error) {
 
 	ret := <-retChan
 	if ret.err != nil {
-		fmt.Println(cmd, ret.err)
+		// fmt.Println(cmd, ret.err)
 		return ret.result, ret.err
 	}
 	ret = <-retChan
