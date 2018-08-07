@@ -58,14 +58,14 @@ func NewAsyncPool(newFn func() (AsynConn, error), testFn func(AsynConn, time.Tim
 func (p *AsyncPool) Get() AsynConn {
 	p.mu.Lock()
 
+	if p.Wait && p.cond == nil {
+		p.cond = sync.NewCond(&p.mu)
+	}
+
 	for {
 		if p.closed {
 			p.mu.Unlock()
 			return errorConnection{errors.New("RedisGo-Async: get on closed pool")}
-		}
-
-		if p.Wait && p.cond == nil {
-			p.cond = sync.NewCond(&p.mu)
 		}
 
 		if p.blocking {
