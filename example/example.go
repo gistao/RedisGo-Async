@@ -56,8 +56,7 @@ func newAsyncPool(addr string) *redis.AsyncPool {
 			c, err := redis.AsyncDial("tcp", addr)
 			return c, err
 		},
-		Wait:         true,
-		MaxWaitCount: 1000,
+		MaxGetCount: 1000,
 	}
 }
 

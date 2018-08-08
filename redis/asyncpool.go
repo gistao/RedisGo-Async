@@ -36,17 +36,20 @@ type AsyncPool struct {
 	// to the pool. If the function returns an error, then the connection is
 	// closed.
 	TestOnBorrow func(c AsynConn, t time.Time) error
+	// MaxGetCount is the maximum value that limits the hang up 'Get()' goroutine.
+	// When zero, there is no limit.
+	MaxGetCount int
+	// MaxGetCount is the maximum value that limits the hang up 'Do()' goroutine.
+	// When zero, there is no limit.
+	MaxDoCount int
 
-	Wait bool
-
-	MaxWaitCount int
-
-	c         *asyncPoolConnection
-	mu        sync.Mutex
-	cond      *sync.Cond
-	waitCount int
-	closed    bool
-	blocking  bool
+	c        *asyncPoolConnection
+	mu       sync.Mutex
+	cond     *sync.Cond
+	getCount int
+	doCount  int
+	closed   bool
+	blocking bool
 }
 
 // NewAsyncPool creates a new async pool.
@@ -57,26 +60,28 @@ func NewAsyncPool(newFn func() (AsynConn, error), testFn func(AsynConn, time.Tim
 // Get gets a connection.
 func (p *AsyncPool) Get() AsynConn {
 	p.mu.Lock()
-
-	if p.Wait && p.cond == nil {
+	if p.cond == nil {
 		p.cond = sync.NewCond(&p.mu)
 	}
 
+	p.getCount++
+	if p.MaxGetCount != 0 && p.getCount >= p.MaxGetCount {
+		p.getCount--
+		p.mu.Unlock()
+		return errorConnection{ErrPoolExhausted}
+	}
+
+	var pc AsynConn
 	for {
 		if p.closed {
+			p.getCount--
 			p.mu.Unlock()
-			return errorConnection{errors.New("RedisGo-Async: get on closed pool")}
+			return errorConnection{errPoolClosed}
 		}
 
 		if p.blocking {
-			if p.Wait && (p.MaxWaitCount == 0 || p.waitCount < p.MaxWaitCount) {
-				p.waitCount++
-				p.cond.Wait()
-				p.waitCount--
-				continue
-			}
-			p.mu.Unlock()
-			return errorConnection{errors.New("RedisGo-Async: pool is blocking")}
+			p.cond.Wait()
+			continue
 		}
 
 		if p.c != nil && p.c.Err() == nil {
@@ -84,44 +89,51 @@ func (p *AsyncPool) Get() AsynConn {
 				p.blocking = true
 				ic := p.c.c.(*asynConn)
 				p.mu.Unlock()
+
 				err := test(p.c, ic.t)
+
 				p.mu.Lock()
 				p.blocking = false
 				if err == nil {
-					if p.cond != nil {
-						p.cond.Broadcast()
-					}
+					pc = p.c
+					p.getCount--
+					p.cond.Signal()
 					p.mu.Unlock()
-					return p.c
+					return pc
 				}
-				p.c.c.Close()
 			} else {
+				pc = p.c
+				p.getCount--
+				p.cond.Signal()
 				p.mu.Unlock()
-				return p.c
+				return pc
 			}
-		} else if p.c != nil {
-			p.c.c.Close()
 		}
 
+		if p.c != nil {
+			p.c.c.Close()
+		}
 		p.blocking = true
 		p.mu.Unlock()
+
 		c, err := p.Dial()
+
 		p.mu.Lock()
 		p.blocking = false
 		if err != nil {
-			if p.cond != nil {
-				p.cond.Signal()
-			}
+			p.getCount--
+			p.cond.Signal()
 			p.mu.Unlock()
 			return errorConnection{err}
 		}
+
 		p.c = &asyncPoolConnection{p: p, c: c}
-		if p.cond != nil {
-			p.cond.Broadcast()
-		}
+		pc := p.c
+		p.getCount--
+		p.cond.Signal()
 		p.mu.Unlock()
 
-		return p.c
+		return pc
 	}
 }
 
@@ -173,7 +185,25 @@ func (pc *asyncPoolConnection) Err() error {
 }
 
 func (pc *asyncPoolConnection) Do(commandName string, args ...interface{}) (reply interface{}, err error) {
-	return pc.c.Do(commandName, args...)
+	if pc.p.MaxDoCount != 0 {
+		pc.p.mu.Lock()
+		pc.p.doCount++
+		if pc.p.doCount >= pc.p.MaxDoCount {
+			pc.p.doCount--
+			pc.p.mu.Unlock()
+			return nil, ErrPoolExhausted
+		}
+	}
+
+	reply, err = pc.c.Do(commandName, args...)
+
+	if pc.p.MaxDoCount != 0 {
+		pc.p.mu.Lock()
+		pc.p.doCount--
+		pc.p.mu.Unlock()
+	}
+
+	return reply, err
 }
 
 func (pc *asyncPoolConnection) AsyncDo(commandName string, args ...interface{}) (ret AsyncRet, err error) {

@@ -16,7 +16,6 @@ package redis
 
 import (
 	"errors"
-	// "fmt"
 	"time"
 )
 
@@ -114,7 +113,6 @@ func (c *asynConn) Do(cmd string, args ...interface{}) (interface{}, error) {
 
 	ret := <-retChan
 	if ret.err != nil {
-		// fmt.Println(cmd, ret.err)
 		return ret.result, ret.err
 	}
 	ret = <-retChan
@@ -153,13 +151,13 @@ func (c *asynConn) Close() error {
 }
 
 func (c *asynConn) doRequest() {
-	reqs := make([]*tRequest, 0, 1000)
 	for {
 		select {
 		case <-c.closeReqChan:
 			close(c.reqChan)
 			c.closeRepChan <- true
 			return
+
 		case req := <-c.reqChan:
 			for i, length := 0, len(c.reqChan); ; {
 				if c.writeTimeout != 0 {
@@ -170,24 +168,19 @@ func (c *asynConn) doRequest() {
 					c.fatal(err)
 					break
 				}
-				reqs = append(reqs, req)
-				if i++; i > length || c.bw.Buffered() >= 4096 {
+				req.c <- &tResult{nil, nil}
+				c.repChan <- &tReply{cmd: req.cmd, c: req.c}
+				if i++; i > length {
 					break
 				}
 				req = <-c.reqChan
 			}
 		}
 
-		err := c.bw.Flush()
-		for i := range reqs {
-			reqs[i].c <- &tResult{nil, err}
-			if err != nil {
-				c.fatal(err)
-				continue
-			}
-			c.repChan <- &tReply{cmd: reqs[i].cmd, c: reqs[i].c}
+		if err := c.bw.Flush(); err != nil {
+			c.fatal(err)
+			continue
 		}
-		reqs = reqs[:0]
 	}
 }
 
@@ -197,13 +190,14 @@ func (c *asynConn) doReply() {
 		case <-c.closeRepChan:
 			close(c.repChan)
 			return
+
 		case rep := <-c.repChan:
 			if c.readTimeout != 0 {
 				c.conn.conn.SetReadDeadline(time.Now().Add(c.readTimeout))
 			}
 			reply, err := c.readReply()
 			if err != nil {
-				rep.c <- &tResult{nil, c.fatal(err)}
+				rep.c <- &tResult{nil, err}
 				c.fatal(err)
 				continue
 			} else {
