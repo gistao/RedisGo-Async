@@ -17,6 +17,7 @@ package redis
 import (
 	"errors"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -47,7 +48,7 @@ type AsyncPool struct {
 	mu       sync.Mutex
 	cond     *sync.Cond
 	getCount int
-	doCount  int
+	doCount  int32
 	closed   bool
 	blocking bool
 }
@@ -186,23 +187,16 @@ func (pc *asyncPoolConnection) Err() error {
 
 func (pc *asyncPoolConnection) Do(commandName string, args ...interface{}) (reply interface{}, err error) {
 	if pc.p.MaxDoCount != 0 {
-		pc.p.mu.Lock()
-		pc.p.doCount++
-		if pc.p.doCount >= pc.p.MaxDoCount {
-			pc.p.doCount--
-			pc.p.mu.Unlock()
+		if atomic.AddInt32(&pc.p.doCount, 1) >= int32(pc.p.MaxDoCount) {
+			atomic.AddInt32(&pc.p.doCount, -1)
 			return nil, ErrPoolExhausted
 		}
 	}
 
 	reply, err = pc.c.Do(commandName, args...)
-
 	if pc.p.MaxDoCount != 0 {
-		pc.p.mu.Lock()
-		pc.p.doCount--
-		pc.p.mu.Unlock()
+		atomic.AddInt32(&pc.p.doCount, -1)
 	}
-
 	return reply, err
 }
 
