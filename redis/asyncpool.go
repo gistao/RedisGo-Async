@@ -66,7 +66,7 @@ func (p *AsyncPool) Get() AsynConn {
 	}
 
 	p.getCount++
-	if p.MaxGetCount != 0 && p.getCount >= p.MaxGetCount {
+	if p.MaxGetCount != 0 && p.getCount > p.MaxGetCount {
 		p.getCount--
 		p.mu.Unlock()
 		return errorConnection{ErrPoolExhausted}
@@ -187,17 +187,17 @@ func (pc *asyncPoolConnection) Err() error {
 
 func (pc *asyncPoolConnection) Do(commandName string, args ...interface{}) (reply interface{}, err error) {
 	if pc.p.MaxDoCount != 0 {
-		if atomic.AddInt32(&pc.p.doCount, 1) >= int32(pc.p.MaxDoCount) {
+		if atomic.AddInt32(&pc.p.doCount, 1) > int32(pc.p.MaxDoCount) {
 			atomic.AddInt32(&pc.p.doCount, -1)
 			return nil, ErrPoolExhausted
 		}
+
+		defer func() {
+			atomic.AddInt32(&pc.p.doCount, -1)
+		}()
 	}
 
-	reply, err = pc.c.Do(commandName, args...)
-	if pc.p.MaxDoCount != 0 {
-		atomic.AddInt32(&pc.p.doCount, -1)
-	}
-	return reply, err
+	return pc.c.Do(commandName, args...)
 }
 
 func (pc *asyncPoolConnection) AsyncDo(commandName string, args ...interface{}) (ret AsyncRet, err error) {
